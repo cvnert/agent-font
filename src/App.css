@@ -56,6 +56,70 @@
   color: #fff;
 }
 
+.stats-toggle-btn {
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: transparent;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.stats-toggle-btn:hover {
+  background: #333;
+}
+
+.stats-panel {
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  padding: 0.75rem 1rem;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  background: #252525;
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.stat-item.detail {
+  grid-column: span 2;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a6cf7;
+  white-space: nowrap;
+}
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -173,6 +237,28 @@
   .logout-btn:hover {
     background: #f0f0f0;
     color: #333;
+  }
+
+  .stats-toggle-btn {
+    border-color: #ccc;
+  }
+
+  .stats-toggle-btn:hover {
+    background: #f0f0f0;
+  }
+
+  .stats-panel {
+    background: #f8f8f8;
+    border-bottom-color: #ddd;
+  }
+
+  .stat-item {
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .stat-value {
+    color: #4a6cf7;
   }
 
   .message.assistant .message-bubble {

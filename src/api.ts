@@ -54,11 +54,17 @@ export async function fetchModels(): Promise<string[]> {
   return data.models
 }
 
+export interface TokenUsage {
+  prompt_tokens: number
+  completion_tokens: number
+  total_tokens: number
+}
+
 export async function sendChat(
   model: string,
   messages: ChatMessage[],
   onChunk: (content: string) => void,
-  onDone: () => void,
+  onDone: (usage?: TokenUsage) => void,
 ) {
   const res = await fetch('/api/chat', {
     method: 'POST',
@@ -75,6 +81,7 @@ export async function sendChat(
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
+  let usage: TokenUsage | undefined
 
   while (true) {
     const { done, value } = await reader.read()
@@ -89,7 +96,7 @@ export async function sendChat(
       if (!trimmed.startsWith('data: ')) continue
       const payload = trimmed.slice(6)
       if (payload === '[DONE]') {
-        onDone()
+        onDone(usage)
         return
       }
       try {
@@ -97,11 +104,56 @@ export async function sendChat(
         if (parsed.content) {
           onChunk(parsed.content)
         }
+        if (parsed.usage) {
+          usage = parsed.usage
+        }
       } catch {
         // skip malformed JSON
       }
     }
   }
 
-  onDone()
+  onDone(usage)
+}
+
+export interface TokenStats {
+  total_conversations: number
+  total_prompt_tokens: number
+  total_completion_tokens: number
+  total_tokens: number
+  today_conversations: number
+  today_tokens: number
+}
+
+export async function fetchTokenStats(): Promise<TokenStats> {
+  const res = await fetch('/api/usage/stats', {
+    headers: authHeaders(),
+  })
+  if (!res.ok) {
+    handleUnauthorized(res)
+    throw new Error(`Failed to fetch stats: ${res.status}`)
+  }
+  return res.json()
+}
+
+export interface ChatUsage {
+  id: number
+  user_id: number
+  model: string
+  prompt_tokens: number
+  completion_tokens: number
+  total_tokens: number
+  created_at: string
+}
+
+export async function fetchRecentUsage(limit: number = 10): Promise<ChatUsage[]> {
+  const res = await fetch(`/api/usage/recent?limit=${limit}`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) {
+    handleUnauthorized(res)
+    throw new Error(`Failed to fetch recent usage: ${res.status}`)
+  }
+  const data = await res.json()
+  return data.usages
 }
