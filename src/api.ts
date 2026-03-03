@@ -157,3 +157,61 @@ export async function fetchRecentUsage(limit: number = 10): Promise<ChatUsage[]>
   const data = await res.json()
   return data.usages
 }
+
+// Token 余额和购买
+export interface BalanceResponse {
+  balance: number
+}
+
+export async function fetchBalance(): Promise<number> {
+  const res = await fetch('/api/balance', {
+    headers: authHeaders(),
+  })
+  if (!res.ok) {
+    handleUnauthorized(res)
+    throw new Error(`Failed to fetch balance: ${res.status}`)
+  }
+  const data = await res.json()
+  return data.balance
+}
+
+export interface PurchaseResponse {
+  success: boolean
+  amount: number
+  balance: number
+  message: string
+}
+
+export async function purchaseTokens(pkg: 'small' | 'medium' | 'large'): Promise<PurchaseResponse> {
+  const res = await fetch('/api/purchase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ package: pkg }),
+  })
+  if (!res.ok) {
+    handleUnauthorized(res)
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || `购买失败: ${res.status}`)
+  }
+  return res.json()
+}
+
+export interface PurchaseRecord {
+  id: number
+  user_id: number
+  amount: number
+  price: number
+  created_at: string
+}
+
+export async function fetchPurchaseHistory(): Promise<PurchaseRecord[]> {
+  const res = await fetch('/api/purchase/history', {
+    headers: authHeaders(),
+  })
+  if (!res.ok) {
+    handleUnauthorized(res)
+    throw new Error(`Failed to fetch history: ${res.status}`)
+  }
+  const data = await res.json()
+  return data.records
+}

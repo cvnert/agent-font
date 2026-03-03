@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { fetchModels, sendChat, fetchTokenStats, type ChatMessage, type TokenStats, type TokenUsage } from './api'
+import { fetchModels, sendChat, fetchTokenStats, fetchBalance, purchaseTokens, type ChatMessage, type TokenStats, type TokenUsage } from './api'
 import { useAuth } from './AuthContext'
 import './App.css'
 
@@ -14,6 +14,9 @@ function App() {
   const [currentUsage, setCurrentUsage] = useState<TokenUsage | null>(null)
   const [stats, setStats] = useState<TokenStats | null>(null)
   const [showStats, setShowStats] = useState(false)
+  const [balance, setBalance] = useState<number>(0)
+  const [showPurchase, setShowPurchase] = useState(false)
+  const [purchasing, setPurchasing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -27,7 +30,17 @@ function App() {
 
   useEffect(() => {
     loadStats()
+    loadBalance()
   }, [])
+
+  const loadBalance = async () => {
+    try {
+      const b = await fetchBalance()
+      setBalance(b)
+    } catch (err) {
+      console.error('Failed to load balance:', err)
+    }
+  }
 
   const loadStats = async () => {
     try {
@@ -35,6 +48,20 @@ function App() {
       setStats(s)
     } catch (err) {
       console.error('Failed to load stats:', err)
+    }
+  }
+
+  const handlePurchase = async (pkg: 'small' | 'medium' | 'large') => {
+    setPurchasing(true)
+    try {
+      const result = await purchaseTokens(pkg)
+      setBalance(result.balance)
+      alert(result.message)
+      setShowPurchase(false)
+    } catch (err: any) {
+      alert(err.message || '购买失败')
+    } finally {
+      setPurchasing(false)
     }
   }
 
@@ -77,12 +104,20 @@ function App() {
           }
         },
       )
-    } catch (err) {
+    } catch (err: any) {
       console.error('Chat error:', err)
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: '请求失败，请检查后端服务是否运行。' },
-      ])
+      const errorMsg = err.message || '请求失败，请检查后端服务是否运行。'
+      if (errorMsg.includes('余额不足') || errorMsg.includes('Token')) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: `❌ ${errorMsg}\n\n请点击右上角 💰 购买 Token。` },
+        ])
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: errorMsg },
+        ])
+      }
       setStreamingContent('')
       setIsLoading(false)
     }
@@ -111,6 +146,10 @@ function App() {
               </option>
             ))}
           </select>
+          <div className="balance-badge" onClick={() => setShowPurchase(true)} title="点击购买">
+            <span className="balance-icon">💰</span>
+            <span className="balance-amount">{balance.toLocaleString()}</span>
+          </div>
           <button
             className="stats-toggle-btn"
             onClick={() => setShowStats(!showStats)}
@@ -122,6 +161,43 @@ function App() {
           <button className="logout-btn" onClick={logout}>退出</button>
         </div>
       </header>
+
+      {showPurchase && (
+        <div className="purchase-panel">
+          <div className="purchase-header">
+            <h3>购买 Token</h3>
+            <button className="close-btn" onClick={() => setShowPurchase(false)}>✕</button>
+          </div>
+          <div className="purchase-packages">
+            <div className="package-card" onClick={() => handlePurchase('small')}>
+              <div className="package-name">小份</div>
+              <div className="package-amount">10,000 Tokens</div>
+              <div className="package-price">¥9.9</div>
+              <button className="buy-btn" disabled={purchasing}>
+                {purchasing ? '购买中...' : '立即购买'}
+              </button>
+            </div>
+            <div className="package-card recommended" onClick={() => handlePurchase('medium')}>
+              <div className="package-badge">推荐</div>
+              <div className="package-name">中份</div>
+              <div className="package-amount">50,000 Tokens</div>
+              <div className="package-price">¥39.9</div>
+              <button className="buy-btn" disabled={purchasing}>
+                {purchasing ? '购买中...' : '立即购买'}
+              </button>
+            </div>
+            <div className="package-card" onClick={() => handlePurchase('large')}>
+              <div className="package-name">大份</div>
+              <div className="package-amount">200,000 Tokens</div>
+              <div className="package-price">¥129.9</div>
+              <button className="buy-btn" disabled={purchasing}>
+                {purchasing ? '购买中...' : '立即购买'}
+              </button>
+            </div>
+          </div>
+          <p className="purchase-note">💡 点击套餐即可购买（演示模式，无需真实支付）</p>
+        </div>
+      )}
 
       {showStats && stats && (
         <div className="stats-panel">
