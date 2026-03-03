@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { fetchModels, sendChat, type ChatMessage } from './api'
+import { useAuth } from './AuthContext'
 import './App.css'
 
 function App() {
+  const { username, logout } = useAuth()
   const [models, setModels] = useState<string[]>([])
   const [currentModel, setCurrentModel] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -76,17 +78,21 @@ function App() {
     <div className="chat-container">
       <header className="chat-header">
         <h1>AI Chat</h1>
-        <select
-          value={currentModel}
-          onChange={(e) => setCurrentModel(e.target.value)}
-          disabled={isLoading}
-        >
-          {models.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
+        <div className="header-right">
+          <select
+            value={currentModel}
+            onChange={(e) => setCurrentModel(e.target.value)}
+            disabled={isLoading}
+          >
+            {models.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <span className="header-username">{username}</span>
+          <button className="logout-btn" onClick={logout}>退出</button>
+        </div>
       </header>
 
       <main className="chat-messages">

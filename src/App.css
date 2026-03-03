@@ -30,6 +30,32 @@
   cursor: pointer;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-username {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.logout-btn {
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: transparent;
+  color: #ccc;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: #333;
+  color: #fff;
+}
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -133,6 +159,20 @@
   .chat-header select {
     background: #fff;
     border-color: #ccc;
+  }
+
+  .header-username {
+    color: #666;
+  }
+
+  .logout-btn {
+    border-color: #ccc;
+    color: #666;
+  }
+
+  .logout-btn:hover {
+    background: #f0f0f0;
+    color: #333;
   }
 
   .message.assistant .message-bubble {
