@@ -101,6 +101,7 @@ function App() {
           if (usage) {
             setCurrentUsage(usage)
             loadStats() // 刷新统计
+            loadBalance() // 刷新余额
           }
         },
       )
